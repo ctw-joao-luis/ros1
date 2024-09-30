@@ -1,4 +1,4 @@
-import type { XmlRpcValue } from "@foxglove/xmlrpc";
+import type { XmlRpcValue } from "@lichtblick/xmlrpc";
 
 import type { RosXmlRpcResponse } from "../XmlRpcTypes";
 

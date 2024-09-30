@@ -1,4 +1,4 @@
-import { XmlRpcValue } from "@foxglove/xmlrpc";
+import { XmlRpcValue } from "@lichtblick/xmlrpc";
 
 import { RosXmlRpcClient } from "./RosXmlRpcClient";
 import { RosXmlRpcResponse, RosXmlRpcResponseOrFault } from "./XmlRpcTypes";

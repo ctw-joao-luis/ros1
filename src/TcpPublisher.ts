@@ -31,30 +31,30 @@ interface TcpPublisherEvents {
 // TCP connection sends a connection header that specifies which topic that
 // connection is subscribing to.
 export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Publisher {
-  private _server: TcpServer;
-  private _nodeName: string;
-  private _getConnectionId: () => number;
-  private _getPublication: PublicationLookup;
-  private _pendingClients = new Map<number, TcpClient>();
-  private _shutdown = false;
-  private _log?: LoggerService;
+  #server: TcpServer;
+  #nodeName: string;
+  #getConnectionId: () => number;
+  #getPublication: PublicationLookup;
+  #pendingClients = new Map<number, TcpClient>();
+  #shutdown = false;
+  #log?: LoggerService;
 
   constructor({ server, nodeName, getConnectionId, getPublication, log }: TcpPublisherOpts) {
     super();
-    this._server = server;
-    this._nodeName = nodeName;
-    this._getConnectionId = getConnectionId;
-    this._getPublication = getPublication;
-    this._log = log;
+    this.#server = server;
+    this.#nodeName = nodeName;
+    this.#getConnectionId = getConnectionId;
+    this.#getPublication = getPublication;
+    this.#log = log;
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    server.on("connection", this._handleConnection);
-    server.on("close", this._handleClose);
-    server.on("error", this._handleError);
+    server.on("connection", this.#handleConnection);
+    server.on("close", this.#handleClose);
+    server.on("error", this.#handleError);
   }
 
   async address(): Promise<TcpAddress | undefined> {
-    return await this._server.address();
+    return await this.#server.address();
   }
 
   async publish(publication: Publication, message: unknown): Promise<void> {
@@ -70,7 +70,7 @@ export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Pu
     publication.messageWriter.writeMessage(message, msgData);
 
     const data = new Uint8Array(buffer, 0, dataSize);
-    return await publication.write(this.transportType(), data);
+    await publication.write(this.transportType(), data);
   }
 
   transportType(): string {
@@ -78,31 +78,31 @@ export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Pu
   }
 
   listening(): boolean {
-    return !this._shutdown;
+    return !this.#shutdown;
   }
 
   close(): void {
-    this._log?.debug?.(`stopping tcp publisher for ${this._nodeName}`);
+    this.#log?.debug?.(`stopping tcp publisher for ${this.#nodeName}`);
 
-    this._shutdown = true;
+    this.#shutdown = true;
     this.removeAllListeners();
-    this._server.close();
+    this.#server.close();
 
-    for (const client of this._pendingClients.values()) {
+    for (const client of this.#pendingClients.values()) {
       client.removeAllListeners();
       client.close();
     }
-    this._pendingClients.clear();
+    this.#pendingClients.clear();
   }
 
   // TcpServer handlers ////////////////////////////////////////////////////////
 
-  private _handleConnection = async (socket: TcpSocket): Promise<void> => {
+  #handleConnection = async (socket: TcpSocket): Promise<void> => {
     const noOp = () => {
       // no-op
     };
 
-    if (this._shutdown) {
+    if (this.#shutdown) {
       socket.close().catch(noOp);
       return;
     }
@@ -111,39 +111,39 @@ export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Pu
     // that may not be setup in time otherwise
     const client = new TcpClient({
       socket,
-      nodeName: this._nodeName,
-      getPublication: this._getPublication,
-      log: this._log,
+      nodeName: this.#nodeName,
+      getPublication: this.#getPublication,
+      log: this.#log,
     });
 
-    const connectionId = this._getConnectionId();
-    this._pendingClients.set(connectionId, client);
+    const connectionId = this.#getConnectionId();
+    this.#pendingClients.set(connectionId, client);
 
     client.on("subscribe", (topic, destinationCallerId) => {
-      this._pendingClients.delete(connectionId);
-      if (!this._shutdown) {
+      this.#pendingClients.delete(connectionId);
+      if (!this.#shutdown) {
         this.emit("connection", topic, connectionId, destinationCallerId, client);
       }
     });
     client.on("error", (err) => {
-      if (!this._shutdown) {
-        this._log?.warn?.(`tcp client ${client.toString()} error: ${err}`);
+      if (!this.#shutdown) {
+        this.#log?.warn?.(`tcp client ${client.toString()} error: ${err}`);
         this.emit("error", new Error(`TCP client ${client.toString()} error: ${err}`));
       }
     });
   };
 
-  private _handleClose = (): void => {
-    if (!this._shutdown) {
-      this._log?.warn?.(`tcp server closed unexpectedly. shutting down tcp publisher`);
+  #handleClose = (): void => {
+    if (!this.#shutdown) {
+      this.#log?.warn?.(`tcp server closed unexpectedly. shutting down tcp publisher`);
       this.emit("error", new Error("TCP publisher closed unexpectedly"));
-      this._shutdown = true;
+      this.#shutdown = true;
     }
   };
 
-  private _handleError = (err: Error): void => {
-    if (!this._shutdown) {
-      this._log?.warn?.(`tcp publisher error: ${err}`);
+  #handleError = (err: Error): void => {
+    if (!this.#shutdown) {
+      this.#log?.warn?.(`tcp publisher error: ${err}`);
       this.emit("error", err);
     }
   };

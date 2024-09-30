@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { HttpServerNodejs } from "@foxglove/xmlrpc/nodejs";
+import { HttpServerNodejs } from "@lichtblick/xmlrpc/nodejs";
 
 import { getEnvVar, getHostname, getNetworkInterfaces } from "./platform";
 import { RosMaster } from "../RosMaster";

@@ -1,6 +1,6 @@
-import { MessageDefinition } from "@foxglove/message-definition";
-import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
-import { MessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageDefinition } from "@lichtblick/message-definition";
+import { parse as parseMessageDefinition } from "@lichtblick/rosmsg";
+import { MessageReader } from "@lichtblick/rosmsg-serialization";
 import { EventEmitter } from "eventemitter3";
 
 import { Connection, ConnectionStats } from "./Connection";
@@ -28,26 +28,26 @@ export interface TcpConnectionEvents {
 export class TcpConnection extends EventEmitter<TcpConnectionEvents> implements Connection {
   retries = 0;
 
-  private _socket: TcpSocket;
-  private _address: string;
-  private _port: number;
-  private _connected = false;
-  private _shutdown = false;
-  private _transportInfo = "TCPROS not connected [socket -1]";
-  private _readingHeader = true;
-  private _requestHeader: Map<string, string>;
-  private _header = new Map<string, string>();
-  private _stats = {
+  #socket: TcpSocket;
+  #address: string;
+  #port: number;
+  #connected = false;
+  #shutdown = false;
+  #transportInfo = "TCPROS not connected [socket -1]";
+  #readingHeader = true;
+  #requestHeader: Map<string, string>;
+  #header = new Map<string, string>();
+  #stats = {
     bytesSent: 0,
     bytesReceived: 0,
     messagesSent: 0,
     messagesReceived: 0,
     dropEstimate: -1,
   };
-  private _transformer = new RosTcpMessageStream();
-  private _msgDefinition: MessageDefinition[] = [];
-  private _msgReader: MessageReader | undefined;
-  private _log?: LoggerService;
+  #transformer = new RosTcpMessageStream();
+  #msgDefinition: MessageDefinition[] = [];
+  #msgReader: MessageReader | undefined;
+  #log?: LoggerService;
 
   constructor(
     socket: TcpSocket,
@@ -57,19 +57,19 @@ export class TcpConnection extends EventEmitter<TcpConnectionEvents> implements 
     log?: LoggerService,
   ) {
     super();
-    this._socket = socket;
-    this._address = address;
-    this._port = port;
-    this._requestHeader = requestHeader;
-    this._log = log;
+    this.#socket = socket;
+    this.#address = address;
+    this.#port = port;
+    this.#requestHeader = requestHeader;
+    this.#log = log;
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    socket.on("connect", this._handleConnect);
-    socket.on("close", this._handleClose);
-    socket.on("error", this._handleError);
-    socket.on("data", this._handleData);
+    socket.on("connect", this.#handleConnect);
+    socket.on("close", this.#handleClose);
+    socket.on("error", this.#handleError);
+    socket.on("data", this.#handleData);
 
-    this._transformer.on("message", this._handleMessage);
+    this.#transformer.on("message", this.#handleMessage);
   }
 
   transportType(): string {
@@ -77,72 +77,72 @@ export class TcpConnection extends EventEmitter<TcpConnectionEvents> implements 
   }
 
   async remoteAddress(): Promise<TcpAddress | undefined> {
-    return await this._socket.remoteAddress();
+    return await this.#socket.remoteAddress();
   }
 
   async connect(): Promise<void> {
-    if (this._shutdown) {
+    if (this.#shutdown) {
       return;
     }
 
-    this._log?.debug?.(`connecting to ${this.toString()} (attempt ${this.retries})`);
+    this.#log?.debug?.(`connecting to ${this.toString()} (attempt ${this.retries})`);
 
     try {
-      await this._socket.connect();
-      this._log?.debug?.(`connected to ${this.toString()}`);
+      await this.#socket.connect();
+      this.#log?.debug?.(`connected to ${this.toString()}`);
     } catch (err) {
-      this._log?.warn?.(`${this.toString()} connection failed: ${err}`);
-      // _handleClose() will be called, triggering a reconnect attempt
+      this.#log?.warn?.(`${this.toString()} connection failed: ${err}`);
+      // #handleClose() will be called, triggering a reconnect attempt
     }
   }
 
-  private _retryConnection(): void {
-    if (!this._shutdown) {
+  #retryConnection(): void {
+    if (!this.#shutdown) {
       backoff(++this.retries)
         // eslint-disable-next-line @typescript-eslint/promise-function-async
         .then(() => this.connect())
         .catch((err) => {
           // This should never be called, this.connect() is not expected to throw
-          this._log?.warn?.(`${this.toString()} unexpected retry failure: ${err}`);
+          this.#log?.warn?.(`${this.toString()} unexpected retry failure: ${err}`);
         });
     }
   }
 
   connected(): boolean {
-    return this._connected;
+    return this.#connected;
   }
 
   header(): Map<string, string> {
-    return new Map<string, string>(this._header);
+    return new Map<string, string>(this.#header);
   }
 
   stats(): ConnectionStats {
-    return this._stats;
+    return this.#stats;
   }
 
   messageDefinition(): MessageDefinition[] {
-    return this._msgDefinition;
+    return this.#msgDefinition;
   }
 
   messageReader(): MessageReader | undefined {
-    return this._msgReader;
+    return this.#msgReader;
   }
 
   close(): void {
-    this._log?.debug?.(`closing connection to ${this.toString()}`);
+    this.#log?.debug?.(`closing connection to ${this.toString()}`);
 
-    this._shutdown = true;
-    this._connected = false;
+    this.#shutdown = true;
+    this.#connected = false;
     this.removeAllListeners();
-    this._socket.close().catch((err) => {
-      this._log?.warn?.(`${this.toString()} close failed: ${err}`);
+    this.#socket.close().catch((err) => {
+      this.#log?.warn?.(`${this.toString()} close failed: ${err}`);
     });
   }
 
   async writeHeader(): Promise<void> {
-    const serializedHeader = TcpConnection.SerializeHeader(this._requestHeader);
+    const serializedHeader = TcpConnection.SerializeHeader(this.#requestHeader);
     const totalLen = 4 + serializedHeader.byteLength;
-    this._stats.bytesSent += totalLen;
+    this.#stats.bytesSent += totalLen;
 
     const data = new Uint8Array(totalLen);
 
@@ -154,22 +154,22 @@ export class TcpConnection extends EventEmitter<TcpConnectionEvents> implements 
     data.set(serializedHeader, 4);
 
     // Write the length and serialized header payload
-    return await this._socket.write(data);
+    await this.#socket.write(data);
   }
 
   // e.g. "TCPROS connection on port 59746 to [host:34318 on socket 11]"
   getTransportInfo(): string {
-    return this._transportInfo;
+    return this.#transportInfo;
   }
 
   override toString(): string {
-    return TcpConnection.Uri(this._address, this._port);
+    return TcpConnection.Uri(this.#address, this.#port);
   }
 
-  private _getTransportInfo = async (): Promise<string> => {
-    const localPort = (await this._socket.localAddress())?.port ?? -1;
-    const addr = await this._socket.remoteAddress();
-    const fd = (await this._socket.fd()) ?? -1;
+  #getTransportInfo = async (): Promise<string> => {
+    const localPort = (await this.#socket.localAddress())?.port ?? -1;
+    const addr = await this.#socket.remoteAddress();
+    const fd = (await this.#socket.fd()) ?? -1;
     if (addr != null) {
       const { address, port } = addr;
       const host = address.includes(":") ? `[${address}]` : address;
@@ -178,85 +178,85 @@ export class TcpConnection extends EventEmitter<TcpConnectionEvents> implements 
     return `TCPROS not connected [socket ${fd}]`;
   };
 
-  private _handleConnect = async (): Promise<void> => {
-    if (this._shutdown) {
+  #handleConnect = async (): Promise<void> => {
+    if (this.#shutdown) {
       this.close();
       return;
     }
 
-    this._connected = true;
+    this.#connected = true;
     this.retries = 0;
-    this._transportInfo = await this._getTransportInfo();
+    this.#transportInfo = await this.#getTransportInfo();
 
     try {
       // Write the initial request header. This prompts the publisher to respond
       // with its own header then start streaming messages
       await this.writeHeader();
     } catch (err) {
-      this._log?.warn?.(`${this.toString()} failed to write header. reconnecting: ${err}`);
+      this.#log?.warn?.(`${this.toString()} failed to write header. reconnecting: ${err}`);
       this.emit("error", new Error(`Header write failed: ${err}`));
-      this._retryConnection();
+      this.#retryConnection();
     }
   };
 
-  private _handleClose = (): void => {
-    this._connected = false;
-    if (!this._shutdown) {
-      this._log?.warn?.(`${this.toString()} closed unexpectedly. reconnecting`);
+  #handleClose = (): void => {
+    this.#connected = false;
+    if (!this.#shutdown) {
+      this.#log?.warn?.(`${this.toString()} closed unexpectedly. reconnecting`);
       this.emit("error", new Error("Connection closed unexpectedly"));
-      this._retryConnection();
+      this.#retryConnection();
     }
   };
 
-  private _handleError = (err: Error): void => {
-    if (!this._shutdown) {
-      this._log?.warn?.(`${this.toString()} error: ${err}`);
+  #handleError = (err: Error): void => {
+    if (!this.#shutdown) {
+      this.#log?.warn?.(`${this.toString()} error: ${err}`);
       this.emit("error", err);
     }
   };
 
-  private _handleData = (chunk: Uint8Array): void => {
-    if (this._shutdown) {
+  #handleData = (chunk: Uint8Array): void => {
+    if (this.#shutdown) {
       return;
     }
 
     try {
-      this._transformer.addData(chunk);
+      this.#transformer.addData(chunk);
     } catch (unk) {
       const err = unk instanceof Error ? unk : new Error(unk as string);
-      this._log?.warn?.(
+      this.#log?.warn?.(
         `failed to decode ${chunk.length} byte chunk from tcp publisher ${this.toString()}: ${err}`,
       );
       // Close the socket, the stream is now corrupt
-      this._socket.close().catch((closeErr) => {
-        this._log?.warn?.(`${this.toString()} close failed: ${closeErr}`);
+      this.#socket.close().catch((closeErr) => {
+        this.#log?.warn?.(`${this.toString()} close failed: ${closeErr}`);
       });
       this.emit("error", err);
     }
   };
 
-  private _handleMessage = (msgData: Uint8Array): void => {
-    if (this._shutdown) {
+  #handleMessage = (msgData: Uint8Array): void => {
+    if (this.#shutdown) {
       this.close();
       return;
     }
 
-    this._stats.bytesReceived += msgData.byteLength;
+    this.#stats.bytesReceived += msgData.byteLength;
 
-    if (this._readingHeader) {
-      this._readingHeader = false;
+    if (this.#readingHeader) {
+      this.#readingHeader = false;
 
-      this._header = TcpConnection.ParseHeader(msgData);
-      this._msgDefinition = parseMessageDefinition(this._header.get("message_definition") ?? "");
-      this._msgReader = new MessageReader(this._msgDefinition);
-      this.emit("header", this._header, this._msgDefinition, this._msgReader);
+      this.#header = TcpConnection.ParseHeader(msgData);
+      this.#msgDefinition = parseMessageDefinition(this.#header.get("message_definition") ?? "");
+      this.#msgReader = new MessageReader(this.#msgDefinition);
+      this.emit("header", this.#header, this.#msgDefinition, this.#msgReader);
     } else {
-      this._stats.messagesReceived++;
+      this.#stats.messagesReceived++;
 
-      if (this._msgReader != null) {
+      if (this.#msgReader != null) {
         try {
           const bytes = new Uint8Array(msgData.buffer, msgData.byteOffset, msgData.length);
-          const msg = this._msgReader.readMessage(bytes);
+          const msg = this.#msgReader.readMessage(bytes);
           this.emit("message", msg, msgData);
         } catch (unk) {
           const err = unk instanceof Error ? unk : new Error(unk as string);

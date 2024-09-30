@@ -1,36 +1,36 @@
-import { HttpHandler, HttpServer } from "@foxglove/xmlrpc";
+import { HttpHandler, HttpServer } from "@lichtblick/xmlrpc";
 
 export class MockHttpServer implements HttpServer {
   handler: HttpHandler = async (_req) => ({ statusCode: 404 });
 
-  private _port?: number;
-  private _hostname?: string;
-  private _defaultHost: string;
-  private _defaultPort: number;
+  #port?: number;
+  #hostname?: string;
+  #defaultHost: string;
+  #defaultPort: number;
 
   constructor(defaultHost: string, defaultPort: number) {
-    this._defaultHost = defaultHost;
-    this._defaultPort = defaultPort;
+    this.#defaultHost = defaultHost;
+    this.#defaultPort = defaultPort;
   }
 
   url(): string | undefined {
-    if (this._hostname == undefined || this._port == undefined) {
+    if (this.#hostname == undefined || this.#port == undefined) {
       return undefined;
     }
-    return `http://${this._hostname}:${this._port}/`;
+    return `http://${this.#hostname}:${this.#port}/`;
   }
 
   port(): number | undefined {
-    return this._port;
+    return this.#port;
   }
 
   async listen(port?: number, hostname?: string, _backlog?: number): Promise<void> {
-    this._port = port ?? this._defaultPort;
-    this._hostname = hostname ?? this._defaultHost;
+    this.#port = port ?? this.#defaultPort;
+    this.#hostname = hostname ?? this.#defaultHost;
   }
 
   close(): void {
-    this._port = undefined;
-    this._hostname = undefined;
+    this.#port = undefined;
+    this.#hostname = undefined;
   }
 }

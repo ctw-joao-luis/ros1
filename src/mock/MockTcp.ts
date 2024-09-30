@@ -3,8 +3,9 @@ import { EventEmitter } from "eventemitter3";
 import { TcpAddress, TcpServer, TcpServerEvents, TcpSocket, TcpSocketEvents } from "../TcpTypes";
 
 export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpSocket {
-  private _connected = true;
+  #connected = true;
 
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor() {
     super();
   }
@@ -13,12 +14,12 @@ export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpS
     return {
       address: "192.168.1.2",
       port: 40000,
-      family: this._connected ? "IPv4" : undefined,
+      family: this.#connected ? "IPv4" : undefined,
     };
   }
 
   async localAddress(): Promise<TcpAddress | undefined> {
-    return this._connected ? { address: "127.0.0.1", port: 30000, family: "IPv4" } : undefined;
+    return this.#connected ? { address: "127.0.0.1", port: 30000, family: "IPv4" } : undefined;
   }
 
   async fd(): Promise<number | undefined> {
@@ -26,7 +27,7 @@ export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpS
   }
 
   async connected(): Promise<boolean> {
-    return this._connected;
+    return this.#connected;
   }
 
   async connect(): Promise<void> {
@@ -34,14 +35,14 @@ export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpS
   }
 
   async close(): Promise<void> {
-    this._connected = false;
+    this.#connected = false;
   }
 
   async write(_data: Uint8Array): Promise<void> {
     // no-op
   }
 
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  // eslint-disable-next-line @lichtblick/no-boolean-parameters
   async setNoDelay(_noDelay?: boolean): Promise<void> {
     // no-op
   }
@@ -50,6 +51,7 @@ export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpS
 export class MockTcpServer extends EventEmitter<TcpServerEvents> implements TcpServer {
   listening = true;
 
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
   constructor() {
     super();
   }

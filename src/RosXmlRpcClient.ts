@@ -1,23 +1,23 @@
-import { XmlRpcClient, XmlRpcFault, XmlRpcValue } from "@foxglove/xmlrpc";
+import { XmlRpcClient, XmlRpcFault, XmlRpcValue } from "@lichtblick/xmlrpc";
 
 import { RosXmlRpcResponse, RosXmlRpcResponseOrFault } from "./XmlRpcTypes";
 
 export class RosXmlRpcClient {
-  private _client: XmlRpcClient;
+  #client: XmlRpcClient;
 
   constructor(url: string) {
-    this._client = new XmlRpcClient(url, { encoding: "utf-8" });
+    this.#client = new XmlRpcClient(url, { encoding: "utf-8" });
   }
 
   url(): string {
-    return this._client.url;
+    return this.#client.url;
   }
 
   protected _methodCall = async (
     methodName: string,
     args: XmlRpcValue[],
   ): Promise<RosXmlRpcResponse> => {
-    const res = await this._client.methodCall(methodName, args);
+    const res = await this.#client.methodCall(methodName, args);
     if (!Array.isArray(res) || res.length !== 3) {
       throw new Error(`Malformed XML-RPC response`);
     }
@@ -32,7 +32,7 @@ export class RosXmlRpcClient {
   protected _multiMethodCall = async (
     requests: { methodName: string; params: XmlRpcValue[] }[],
   ): Promise<RosXmlRpcResponseOrFault[]> => {
-    const res = await this._client.multiMethodCall(requests);
+    const res = await this.#client.multiMethodCall(requests);
 
     const output: RosXmlRpcResponseOrFault[] = [];
     for (const entry of res) {

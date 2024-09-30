@@ -1,5 +1,5 @@
-import { MessageDefinition } from "@foxglove/message-definition";
-import { MessageWriter } from "@foxglove/rosmsg-serialization";
+import { MessageDefinition } from "@lichtblick/message-definition";
+import { MessageWriter } from "@lichtblick/rosmsg-serialization";
 
 import { Client } from "./Client";
 import { SubscriberLink } from "./SubscriberLink";
@@ -19,14 +19,14 @@ export class Publication {
   readonly messageDefinition: MessageDefinition[];
   readonly messageDefinitionText: string;
   readonly messageWriter: MessageWriter;
-  private _latched = new Map<string, Uint8Array>();
-  private _subscribers = new Map<number, SubscriberLink>();
+  #latched = new Map<string, Uint8Array>();
+  #subscribers = new Map<number, SubscriberLink>();
 
   constructor(
     name: string,
     md5sum: string,
     dataType: string,
-    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    // eslint-disable-next-line @lichtblick/no-boolean-parameters
     latching: boolean,
     messageDefinition: MessageDefinition[],
     messageDefinitionText: string,
@@ -42,25 +42,25 @@ export class Publication {
   }
 
   subscribers(): Readonly<Map<number, SubscriberLink>> {
-    return this._subscribers;
+    return this.#subscribers;
   }
 
   addSubscriber(connectionId: number, destinationCallerId: string, client: Client): void {
     const subscriber = new SubscriberLink(connectionId, destinationCallerId, client);
-    this._subscribers.set(connectionId, subscriber);
+    this.#subscribers.set(connectionId, subscriber);
 
     client.on("close", () => {
-      this._subscribers.delete(connectionId);
+      this.#subscribers.delete(connectionId);
     });
   }
 
   async write(transportType: string, data: Uint8Array): Promise<void> {
     if (this.latching) {
-      this._latched.set(transportType, data);
+      this.#latched.set(transportType, data);
     }
 
     const tasks: Promise<void>[] = [];
-    for (const sub of this._subscribers.values()) {
+    for (const sub of this.#subscribers.values()) {
       if (sub.client.transportType() === transportType) {
         // A defensive copy of the data is needed here. The
         // source data array gets "detached".
@@ -71,18 +71,18 @@ export class Publication {
   }
 
   close(): void {
-    for (const sub of this._subscribers.values()) {
+    for (const sub of this.#subscribers.values()) {
       sub.client.close();
     }
-    this._subscribers.clear();
+    this.#subscribers.clear();
   }
 
   latchedMessage(transportType: string): Uint8Array | undefined {
-    return this._latched.get(transportType);
+    return this.#latched.get(transportType);
   }
 
   getInfo(): SubscriberInfo[] {
-    return Array.from(this._subscribers.values()).map((sub): SubscriberInfo => {
+    return Array.from(this.#subscribers.values()).map((sub): SubscriberInfo => {
       return [
         sub.connectionId,
         sub.destinationCallerId,
@@ -96,7 +96,7 @@ export class Publication {
   }
 
   getStats(): [string, SubscriberStats[]] {
-    const subStats = Array.from(this._subscribers.values()).map((sub): SubscriberStats => {
+    const subStats = Array.from(this.#subscribers.values()).map((sub): SubscriberStats => {
       const stats = sub.client.stats();
       return [sub.connectionId, stats.bytesSent, stats.bytesSent, stats.messagesSent, 0];
     });

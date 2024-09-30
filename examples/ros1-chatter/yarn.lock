@@ -29,32 +29,37 @@
     data-uri-to-buffer "^3.0.1"
     fetch-blob "^2.1.1"
 
-"@foxglove/ros1@file:../..":
-  version "1.4.2"
-  dependencies:
-    "@foxglove/rosmsg" "^2.0.0 || ^3.0.0"
-    "@foxglove/rosmsg-serialization" "^1.2.3"
-    "@foxglove/xmlrpc" "^1.2.1"
-    eventemitter3 "^4.0.7"
+"@lichtblick/message-definition@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@lichtblick/message-definition/-/message-definition-1.0.0.tgz#57945e1b84dc00e11fff702236fdfe878848173f"
+  integrity sha512-7/PLENDjYSmZuGp79Cis2tOCrqTGtUTrNtObycqEZKB87OBekSxTGdO5uA6KLNHxKcRftbtXAX+YF5xa/RaxLA==
 
-"@foxglove/rosmsg-serialization@^1.2.3":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg-serialization/-/rosmsg-serialization-1.3.0.tgz#09df28ada98e117f71ed4f63e4ffee179d8a726e"
-  integrity sha512-8at2IJOU9BrQ4PkDfbBXY5AU0SA9iXTQPfa6M0GEwDajjsl3J7SChJjoncDvNqW5UlcDIiqZg6r2EGs4imVIwQ==
+"@lichtblick/ros1@file:../..":
+  version "1.0.0"
   dependencies:
-    "@foxglove/rosmsg" "^2.0.0 || ^3.0.0"
+    "@lichtblick/message-definition" "1.0.0"
+    "@lichtblick/rosmsg" "1.0.0"
+    "@lichtblick/rosmsg-serialization" "1.0.0"
+    "@lichtblick/xmlrpc" "1.0.0"
+    eventemitter3 "^5.0.0"
+    ipaddr.js "^2.0.1"
 
-"@foxglove/rosmsg@^2.0.0 || ^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@foxglove/rosmsg/-/rosmsg-3.0.0.tgz#10ce39e42dab6804977cda297d0d317649184a16"
-  integrity sha512-AAb3DMlLcuntUyEDBioDhbjdbKivC1hj7Gnu7QXX8ce+R50V8xs5sfxccsjE6N0Qs+eQxuzLhT2kW3mNXT/gbg==
+"@lichtblick/rosmsg-serialization@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@lichtblick/rosmsg-serialization/-/rosmsg-serialization-1.0.0.tgz#b79bf829b97587a3e12ff07ab32a7fb352a54acb"
+  integrity sha512-HzCbDKd5UNyYWjmUFdBQqJmMGgEWPwG9XkgX6NyvUlTkte0WxPePsU3HS7GAN8IyoRG9Or2Bw9ihFHKjPrLCDw==
+
+"@lichtblick/rosmsg@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@lichtblick/rosmsg/-/rosmsg-1.0.0.tgz#b84b3304541bad1adc7b2e850601e2a7494e33c6"
+  integrity sha512-gzSHMuoX2gfWv8i+zMqiMf6aN1ASueSwJcVFV6RbgLNik/tG8EKkKs4vUl8593sEOMDjC9kQJdpQ8xxCU5XDZw==
   dependencies:
     md5-typescript "^1.0.5"
 
-"@foxglove/xmlrpc@^1.2.1":
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/@foxglove/xmlrpc/-/xmlrpc-1.2.1.tgz#368ece22e71073755735ef81771efbbc1bb6e614"
-  integrity sha512-bZrMh/Hp3QzOhM0oUC5Hn+9VB70cXK0eWJtud647+c1X6q2T89ZlOz4YPSeiIZE2QRMwOhwokJz/T37vfN4LOw==
+"@lichtblick/xmlrpc@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@lichtblick/xmlrpc/-/xmlrpc-1.0.0.tgz#e096c5a57fc53300de76e2673cb77a73acc6af8c"
+  integrity sha512-FeYoxKK4038IUhcSgwQc3rYlC2vmiwsGQp0wx3zcJt4xdCqzwZAHMzBbPCRbRwMtHhY8iXAS9nYaEPCQXKxJ7g==
   dependencies:
     "@foxglove/just-fetch" "^1.2.4"
     byte-base64 "^1.1.0"
@@ -162,15 +167,20 @@ esprima@^4.0.0:
   resolved "https://registry.yarnpkg.com/esprima/-/esprima-4.0.1.tgz#13b04cdb3e6c5d19df91ab6987a8695619b0aa71"
   integrity sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==
 
-eventemitter3@^4.0.7:
-  version "4.0.7"
-  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-4.0.7.tgz#2de9b68f6528d5644ef5c59526a1b4a07306169f"
-  integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
+eventemitter3@^5.0.0:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-5.0.1.tgz#53f5ffd0a492ac800721bb42c66b841de96423c4"
+  integrity sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
 
 fetch-blob@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/fetch-blob/-/fetch-blob-2.1.2.tgz#a7805db1361bd44c1ef62bb57fb5fe8ea173ef3c"
   integrity sha512-YKqtUDwqLyfyMnmbw8XD6Q8j9i/HggKtPEI+pZ1+8bvheBu78biSmNaXWusx1TauGqtUUGx/cBb1mKdq2rLYow==
+
+ipaddr.js@^2.0.1:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/ipaddr.js/-/ipaddr.js-2.2.0.tgz#d33fa7bac284f4de7af949638c9d68157c6b92e8"
+  integrity sha512-Ag3wB2o37wslZS19hZqorUnrnzSkpOVy+IiiDEiTqNubEYpYuHWIf6K4psgN2ZWKExS4xhVCrRVfb/wfW8fWJA==
 
 js-yaml@3.14.0:
   version "3.14.0"

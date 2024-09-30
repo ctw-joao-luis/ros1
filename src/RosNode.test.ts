@@ -1,4 +1,4 @@
-import { HttpServerNodejs } from "@foxglove/xmlrpc/nodejs";
+import { HttpServerNodejs } from "@lichtblick/xmlrpc/nodejs";
 
 import { PublisherLink } from "./PublisherLink";
 import { RosMaster } from "./RosMaster";
@@ -10,7 +10,7 @@ describe("RosNode", () => {
   it("Publishes and subscribes to topics and parameters", async () => {
     const rosMaster = new RosMaster(new HttpServerNodejs());
     await rosMaster.start("localhost");
-    const rosMasterUri = rosMaster.url() as string;
+    const rosMasterUri = rosMaster.url()!;
     expect(typeof rosMasterUri).toBe("string");
 
     let errA: Error | undefined;
@@ -18,7 +18,7 @@ describe("RosNode", () => {
 
     const nodeA = new RosNode({
       name: "/nodeA",
-      hostname: "localhost",
+      hostname: "0.0.0.0",
       pid: 1,
       rosMasterUri,
       httpServer: new HttpServerNodejs(),
@@ -30,7 +30,7 @@ describe("RosNode", () => {
 
     const nodeB = new RosNode({
       name: "/nodeB",
-      hostname: "localhost",
+      hostname: "0.0.0.0",
       pid: 2,
       rosMasterUri,
       httpServer: new HttpServerNodejs(),
@@ -45,7 +45,9 @@ describe("RosNode", () => {
     const received = new Promise<[unknown, Uint8Array, PublisherLink]>((r) => {
       nodeA
         .subscribe({ topic: "/a", dataType: "std_msgs/Bool" })
-        .on("message", (msg, data, pub) => r([msg, data, pub]));
+        .on("message", (msg, data, pub) => {
+          r([msg, data, pub]);
+        });
     });
 
     await nodeB.start();
@@ -72,7 +74,9 @@ describe("RosNode", () => {
     const initParamValue = await nodeB.subscribeParam("a");
     expect(initParamValue).toBeUndefined();
     const paramUpdated = new Promise<ParamUpdateArgs>((r) => {
-      nodeB.on("paramUpdate", (args) => r(args));
+      nodeB.on("paramUpdate", (args) => {
+        r(args);
+      });
     });
 
     await nodeA.setParameter("a", 42);

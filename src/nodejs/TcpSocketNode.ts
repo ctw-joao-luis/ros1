@@ -10,15 +10,15 @@ type MaybeHasFd = {
 };
 
 export class TcpSocketNode extends EventEmitter<TcpSocketEvents> implements TcpSocket {
-  private _host: string;
-  private _port: number;
-  private _socket: net.Socket;
+  #host: string;
+  #port: number;
+  #socket: net.Socket;
 
   constructor(host: string, port: number, socket: net.Socket) {
     super();
-    this._host = host;
-    this._port = port;
-    this._socket = socket;
+    this.#host = host;
+    this.#port = port;
+    this.#socket = socket;
 
     socket.on("connect", () => this.emit("connect"));
     socket.on("close", () => this.emit("close"));
@@ -30,19 +30,19 @@ export class TcpSocketNode extends EventEmitter<TcpSocketEvents> implements TcpS
 
   async remoteAddress(): Promise<TcpAddress | undefined> {
     return {
-      port: this._port,
-      family: this._socket.remoteFamily,
-      address: this._host,
+      port: this.#port,
+      family: this.#socket.remoteFamily,
+      address: this.#host,
     };
   }
 
   async localAddress(): Promise<TcpAddress | undefined> {
-    if (this._socket.destroyed) {
+    if (this.#socket.destroyed) {
       return undefined;
     }
-    const port = this._socket.localPort;
-    const family = this._socket.remoteFamily; // There is no localFamily
-    const address = this._socket.localAddress;
+    const port = this.#socket.localPort;
+    const family = this.#socket.remoteFamily; // There is no localFamily
+    const address = this.#socket.localAddress;
     return port != undefined && family != undefined && address != undefined
       ? { port, family, address }
       : undefined;
@@ -54,44 +54,44 @@ export class TcpSocketNode extends EventEmitter<TcpSocketEvents> implements TcpS
     // where sockets have file descriptors. See
     // <https://github.com/nodejs/help/issues/1312>
     // eslint-disable-next-line no-underscore-dangle
-    return (this._socket as unknown as MaybeHasFd)._handle?.fd;
+    return (this.#socket as unknown as MaybeHasFd)._handle?.fd;
   }
 
   async connected(): Promise<boolean> {
-    return !this._socket.destroyed && this._socket.localAddress != undefined;
+    return !this.#socket.destroyed && this.#socket.localAddress != undefined;
   }
 
   async connect(): Promise<void> {
-    return await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const KEEPALIVE_MS = 60 * 1000;
 
-      this._socket.on("error", reject).connect(this._port, this._host, () => {
-        this._socket.removeListener("error", reject);
-        this._socket.setKeepAlive(true, KEEPALIVE_MS);
-        resolve();
+      this.#socket.on("error", reject).connect(this.#port, this.#host, () => {
+        this.#socket.removeListener("error", reject);
+        this.#socket.setKeepAlive(true, KEEPALIVE_MS);
+        resolve(undefined);
       });
     });
   }
 
   async close(): Promise<void> {
-    this._socket.destroy();
+    this.#socket.destroy();
   }
 
   async write(data: Uint8Array): Promise<void> {
-    return await new Promise((resolve, reject) => {
-      this._socket.write(data, (err) => {
+    await new Promise((resolve, reject) => {
+      this.#socket.write(data, (err) => {
         if (err != undefined) {
           reject(err);
           return;
         }
-        resolve();
+        resolve(undefined);
       });
     });
   }
 
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  // eslint-disable-next-line @lichtblick/no-boolean-parameters
   async setNoDelay(noDelay?: boolean): Promise<void> {
-    this._socket.setNoDelay(noDelay);
+    this.#socket.setNoDelay(noDelay);
   }
 
   static async Create(

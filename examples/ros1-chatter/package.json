@@ -1,18 +1,18 @@
 {
   "name": "ros1-chatter",
   "version": "0.0.0",
-  "description": "Example @foxglove/ros1 client that publishes to /chatter",
+  "description": "Example @lichtblick/ros1 client that publishes to /chatter",
   "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/foxglove/ros1.git"
+    "url": "https://github.com/Lichtblick-Suite/ros1"
   },
   "author": {
-    "name": "Foxglove Technologies Inc",
-    "email": "contact@foxglove.dev"
+    "name": "Lichtblick",
+    "email": "lichtblick@bmwgroup.com"
   },
-  "homepage": "https://foxglove.dev/",
+  "homepage": "https://github.com/Lichtblick-Suite",
   "main": "dist/index.js",
   "files": [
     "dist"
@@ -26,6 +26,6 @@
     "typescript": "4.5.2"
   },
   "dependencies": {
-    "@foxglove/ros1": "file:../.."
+    "@lichtblick/ros1": "file:../.."
   }
 }

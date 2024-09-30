@@ -5,11 +5,11 @@ import { TcpSocketNode } from "./TcpSocketNode";
 import { TcpAddress, TcpServer, TcpServerEvents } from "../TcpTypes";
 
 export class TcpServerNode extends EventEmitter<TcpServerEvents> implements TcpServer {
-  private _server: net.Server;
+  #server: net.Server;
 
   constructor(server: net.Server) {
     super();
-    this._server = server;
+    this.#server = server;
 
     server.on("close", () => this.emit("close"));
     server.on("connection", (socket) => {
@@ -23,7 +23,7 @@ export class TcpServerNode extends EventEmitter<TcpServerEvents> implements TcpS
   }
 
   async address(): Promise<TcpAddress | undefined> {
-    const addr = this._server.address();
+    const addr = this.#server.address();
     if (addr == undefined || typeof addr === "string") {
       // Address will only be a string for an IPC (named pipe) server, which
       // should never happen in TcpServerNode
@@ -33,7 +33,7 @@ export class TcpServerNode extends EventEmitter<TcpServerEvents> implements TcpS
   }
 
   close(): void {
-    this._server.close();
+    this.#server.close();
   }
 
   static async Listen(options: {

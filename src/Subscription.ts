@@ -1,5 +1,5 @@
-import { MessageDefinition } from "@foxglove/message-definition";
-import { MessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageDefinition } from "@lichtblick/message-definition";
+import { MessageReader } from "@lichtblick/rosmsg-serialization";
 import { EventEmitter } from "eventemitter3";
 
 import { Connection } from "./Connection";
@@ -47,7 +47,7 @@ export class Subscription extends EventEmitter<SubscriptionEvents> {
   readonly md5sum: string;
   readonly dataType: string;
   readonly tcpNoDelay: boolean;
-  private _publishers = new Map<number, PublisherLink>();
+  #publishers = new Map<number, PublisherLink>();
 
   constructor({ name, md5sum, dataType, tcpNoDelay }: SubscriptionOpts) {
     super();
@@ -59,14 +59,14 @@ export class Subscription extends EventEmitter<SubscriptionEvents> {
 
   close(): void {
     this.removeAllListeners();
-    for (const pub of this._publishers.values()) {
+    for (const pub of this.#publishers.values()) {
       pub.connection.close();
     }
-    this._publishers.clear();
+    this.#publishers.clear();
   }
 
   publishers(): Readonly<Map<number, PublisherLink>> {
-    return this._publishers;
+    return this.#publishers;
   }
 
   addPublisher(
@@ -75,7 +75,7 @@ export class Subscription extends EventEmitter<SubscriptionEvents> {
     connection: Connection,
   ): void {
     const publisher = new PublisherLink(connectionId, this, rosFollowerClient, connection);
-    this._publishers.set(connectionId, publisher);
+    this.#publishers.set(connectionId, publisher);
 
     connection.on("header", (header, def, reader) => this.emit("header", header, def, reader));
     connection.on("message", (msg, data) => this.emit("message", msg, data, publisher));
@@ -83,12 +83,12 @@ export class Subscription extends EventEmitter<SubscriptionEvents> {
   }
 
   removePublisher(connectionId: number): boolean {
-    this._publishers.get(connectionId)?.connection.close();
-    return this._publishers.delete(connectionId);
+    this.#publishers.get(connectionId)?.connection.close();
+    return this.#publishers.delete(connectionId);
   }
 
   getInfo(): PublisherInfo[] {
-    return Array.from(this._publishers.values()).map((pub): PublisherInfo => {
+    return Array.from(this.#publishers.values()).map((pub): PublisherInfo => {
       return [
         pub.connectionId,
         pub.publisherXmlRpcUrl().toString(),
@@ -102,7 +102,7 @@ export class Subscription extends EventEmitter<SubscriptionEvents> {
   }
 
   getStats(): [string, PublisherStats[]] {
-    const pubStats = Array.from(this._publishers.values()).map((pub): PublisherStats => {
+    const pubStats = Array.from(this.#publishers.values()).map((pub): PublisherStats => {
       const stats = pub.connection.stats();
       return [pub.connectionId, stats.bytesReceived, stats.messagesReceived, stats.dropEstimate, 0];
     });
@@ -111,7 +111,7 @@ export class Subscription extends EventEmitter<SubscriptionEvents> {
 
   receivedBytes(): number {
     let bytes = 0;
-    for (const pub of this._publishers.values()) {
+    for (const pub of this.#publishers.values()) {
       bytes += pub.connection.stats().bytesReceived;
     }
     return bytes;

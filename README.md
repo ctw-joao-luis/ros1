@@ -1,17 +1,17 @@
-# @foxglove/ros1
+# @lichtblick/ros1
 
 > _Standalone TypeScript implementation of the ROS 1 (Robot Operating System) protocol with a pluggable transport layer_
 
-[![npm version](https://img.shields.io/npm/v/@foxglove/ros1.svg?style=flat)](https://www.npmjs.com/package/@foxglove/ros1)
+[![npm version](https://img.shields.io/npm/v/@lichtblick/ros1.svg?style=flat)](https://www.npmjs.com/package/@lichtblick/ros1)
 
 ## Usage
 
 ```Typescript
 // An example client that connects to the ROS1 turtlesim node
 
-import { RosNode } from "@foxglove/ros1";
-import { getEnvVar, getHostname, getNetworkInterfaces, getPid, TcpSocketNode } from "@foxglove/ros1/nodejs";
-import { HttpServerNodejs } from "@foxglove/xmlrpc/nodejs";
+import { RosNode } from "@lichtblick/ros1";
+import { getEnvVar, getHostname, getNetworkInterfaces, getPid, TcpSocketNode } from "@lichtblick/ros1/nodejs";
+import { HttpServerNodejs } from "@lichtblick/xmlrpc/nodejs";
 
 async function main() {
   const name = "/testclient";
@@ -66,15 +66,10 @@ void main();
 
 ## License
 
-@foxglove/ros1 is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+@lichtblick/ros1 is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Releasing
 
 1. Run `yarn version --[major|minor|patch]` to bump version
 2. Run `git push && git push --tags` to push new tag
 3. GitHub Actions will take care of the rest
-
-## Stay in touch
-
-Join our [Slack channel](https://foxglove.dev/slack) to ask questions, share feedback, and stay up to date on what our team is working on.
-

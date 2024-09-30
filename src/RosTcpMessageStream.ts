@@ -14,50 +14,50 @@ export interface RosTcpMessageStreamEvents {
 // TCPROS format of 4 byte length prefixes followed by message payloads into one
 // complete message per "message" event, discarding the length prefix
 export class RosTcpMessageStream extends EventEmitter<RosTcpMessageStreamEvents> {
-  private _inMessage = false;
-  private _bytesNeeded = 4;
-  private _chunks: Uint8Array[] = [];
+  #inMessage = false;
+  #bytesNeeded = 4;
+  #chunks: Uint8Array[] = [];
 
   addData(chunk: Uint8Array): void {
     let idx = 0;
     while (idx < chunk.length) {
-      if (chunk.length - idx < this._bytesNeeded) {
+      if (chunk.length - idx < this.#bytesNeeded) {
         // If we didn't receive enough bytes to complete the current message or
         // message length field, store this chunk and continue on
-        this._chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx));
-        this._bytesNeeded -= chunk.length - idx;
+        this.#chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx));
+        this.#bytesNeeded -= chunk.length - idx;
         return;
       }
 
       // Store the final chunk needed to complete the current message or message
       // length field
-      this._chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx, this._bytesNeeded));
-      idx += this._bytesNeeded;
+      this.#chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx, this.#bytesNeeded));
+      idx += this.#bytesNeeded;
 
-      const payload = concatData(this._chunks);
-      this._chunks = [];
+      const payload = concatData(this.#chunks);
+      this.#chunks = [];
 
-      if (this._inMessage) {
+      if (this.#inMessage) {
         // Produce a Uint8Array representing a single message and transition to
         // reading a message length field
-        this._bytesNeeded = 4;
+        this.#bytesNeeded = 4;
         this.emit("message", payload);
-        this._inMessage = false;
+        this.#inMessage = false;
       } else {
         // Decode the message length field and transition to reading a message
-        this._bytesNeeded = new DataView(
+        this.#bytesNeeded = new DataView(
           payload.buffer,
           payload.byteOffset,
           payload.byteLength,
         ).getUint32(0, true);
 
-        if (this._bytesNeeded > MAX_MSG_LENGTH) {
-          throw new Error(`Invalid message length of ${this._bytesNeeded} decoded in a tcp stream`);
-        } else if (this._bytesNeeded === 0) {
-          this._bytesNeeded = 4;
+        if (this.#bytesNeeded > MAX_MSG_LENGTH) {
+          throw new Error(`Invalid message length of ${this.#bytesNeeded} decoded in a tcp stream`);
+        } else if (this.#bytesNeeded === 0) {
+          this.#bytesNeeded = 4;
           this.emit("message", new Uint8Array());
         } else {
-          this._inMessage = true;
+          this.#inMessage = true;
         }
       }
     }

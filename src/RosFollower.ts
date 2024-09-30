@@ -1,4 +1,4 @@
-import { HttpServer, HttpRequest, XmlRpcServer, XmlRpcValue } from "@foxglove/xmlrpc";
+import { HttpServer, HttpRequest, XmlRpcServer, XmlRpcValue } from "@lichtblick/xmlrpc";
 import { EventEmitter } from "eventemitter3";
 import ipaddr from "ipaddr.js";
 
@@ -36,37 +36,37 @@ export interface RosFollowerEvents {
 }
 
 export class RosFollower extends EventEmitter<RosFollowerEvents> {
-  private _rosNode: RosNode;
-  private _server: XmlRpcServer;
-  private _url?: string;
+  #rosNode: RosNode;
+  #server: XmlRpcServer;
+  #url?: string;
 
   constructor(rosNode: RosNode, httpServer: HttpServer) {
     super();
-    this._rosNode = rosNode;
-    this._server = new XmlRpcServer(httpServer);
+    this.#rosNode = rosNode;
+    this.#server = new XmlRpcServer(httpServer);
   }
 
   async start(hostname: string, port?: number): Promise<void> {
-    await this._server.listen(port, undefined, 10);
-    this._url = `http://${hostname}:${this._server.port()}/`;
+    await this.#server.listen(port, undefined, 10);
+    this.#url = `http://${hostname}:${this.#server.port()}/`;
 
-    this._server.setHandler("getBusStats", this.getBusStats);
-    this._server.setHandler("getBusInfo", this.getBusInfo);
-    this._server.setHandler("shutdown", this.shutdown);
-    this._server.setHandler("getPid", this.getPid);
-    this._server.setHandler("getSubscriptions", this.getSubscriptions);
-    this._server.setHandler("getPublications", this.getPublications);
-    this._server.setHandler("paramUpdate", this.paramUpdate);
-    this._server.setHandler("publisherUpdate", this.publisherUpdate);
-    this._server.setHandler("requestTopic", this.requestTopic);
+    this.#server.setHandler("getBusStats", this.getBusStats);
+    this.#server.setHandler("getBusInfo", this.getBusInfo);
+    this.#server.setHandler("shutdown", this.shutdown);
+    this.#server.setHandler("getPid", this.getPid);
+    this.#server.setHandler("getSubscriptions", this.getSubscriptions);
+    this.#server.setHandler("getPublications", this.getPublications);
+    this.#server.setHandler("paramUpdate", this.paramUpdate);
+    this.#server.setHandler("publisherUpdate", this.publisherUpdate);
+    this.#server.setHandler("requestTopic", this.requestTopic);
   }
 
   close(): void {
-    this._server.close();
+    this.#server.close();
   }
 
   url(): string | undefined {
-    return this._url;
+    return this.#url;
   }
 
   getBusStats = async (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
@@ -75,8 +75,8 @@ export class RosFollower extends EventEmitter<RosFollowerEvents> {
       throw err;
     }
 
-    const publications = this._rosNode.publications.values();
-    const subscriptions = this._rosNode.subscriptions.values();
+    const publications = this.#rosNode.publications.values();
+    const subscriptions = this.#rosNode.subscriptions.values();
 
     const publishStats: XmlRpcValue[] = Array.from(publications, (pub, __) => pub.getStats());
     const subscribeStats: XmlRpcValue[] = Array.from(subscriptions, (sub, __) => sub.getStats());
@@ -106,7 +106,7 @@ export class RosFollower extends EventEmitter<RosFollowerEvents> {
     }
 
     const msg = args[1] as string | undefined;
-    this._rosNode.shutdown(msg);
+    this.#rosNode.shutdown(msg);
 
     return [1, "", 0];
   };
@@ -117,7 +117,7 @@ export class RosFollower extends EventEmitter<RosFollowerEvents> {
       throw err;
     }
 
-    return [1, "", this._rosNode.pid];
+    return [1, "", this.#rosNode.pid];
   };
 
   getSubscriptions = async (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
@@ -127,7 +127,7 @@ export class RosFollower extends EventEmitter<RosFollowerEvents> {
     }
 
     const subs: [string, string][] = [];
-    this._rosNode.subscriptions.forEach((sub) => subs.push([sub.name, sub.dataType]));
+    this.#rosNode.subscriptions.forEach((sub) => subs.push([sub.name, sub.dataType]));
     return [1, "subscriptions", subs];
   };
 
@@ -138,7 +138,7 @@ export class RosFollower extends EventEmitter<RosFollowerEvents> {
     }
 
     const pubs: [string, string][] = [];
-    this._rosNode.publications.forEach((pub) => pubs.push([pub.name, pub.dataType]));
+    this.#rosNode.publications.forEach((pub) => pubs.push([pub.name, pub.dataType]));
     return [1, "publications", pubs];
   };
 
@@ -184,8 +184,8 @@ export class RosFollower extends EventEmitter<RosFollowerEvents> {
     }
 
     const topic = args[1] as string;
-    if (!this._rosNode.publications.has(topic)) {
-      return [0, `topic "${topic} is not advertised by node ${this._rosNode.name}"`, []];
+    if (!this.#rosNode.publications.has(topic)) {
+      return [0, `topic "${topic} is not advertised by node ${this.#rosNode.name}"`, []];
     }
 
     const protocols = args[2];
@@ -193,7 +193,7 @@ export class RosFollower extends EventEmitter<RosFollowerEvents> {
       return [0, "unsupported protocol", []];
     }
 
-    const addr = await this._rosNode.tcpServerAddress();
+    const addr = await this.#rosNode.tcpServerAddress();
     if (addr == undefined) {
       return [0, "cannot receive incoming connections", []];
     }

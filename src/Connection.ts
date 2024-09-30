@@ -1,5 +1,5 @@
-import { MessageDefinition } from "@foxglove/message-definition";
-import { MessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageDefinition } from "@lichtblick/message-definition";
+import { MessageReader } from "@lichtblick/rosmsg-serialization";
 
 export interface ConnectionStats {
   bytesSent: number;
