@@ -45,10 +45,6 @@ jobs:
       - name: Bump version in root package.json
         run: yarn version --new-version patch
 
-      - name: Bump version in packages/suite
-        working-directory: packages/suite
-        run: yarn version --new-version patch
-
       - name: Commit version bumps
         id: commit_version_bumps
         run: |
