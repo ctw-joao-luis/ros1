@@ -1,6 +1,6 @@
 {
   "name": "@lichtblick/ros1",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Standalone TypeScript implementation of the ROS 1 (Robot Operating System) protocol with a pluggable transport layer",
   "license": "MIT",
   "keywords": [
