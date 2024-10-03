@@ -43,7 +43,7 @@ jobs:
           git config --global user.email 'github-actions@github.com'
 
       - name: Bump version in root package.json
-        run: yarn version --new-version patch
+        run: yarn version --new-version patch --no-git-tag-version
 
       - name: Commit version bumps
         id: commit_version_bumps
