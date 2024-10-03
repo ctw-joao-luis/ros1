@@ -13,12 +13,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.LICHTBLICK_GITHUB_TOKEN }}
-          lfs: true
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18' #new test1
+          node-version: '18'
 
       - run: corepack enable
 
@@ -44,6 +43,17 @@ jobs:
 
       - name: Bump version in root package.json
         run: yarn version --new-version patch --no-git-tag-version
+
+      - name: Get the new version from package.json
+        id: get_version
+        run: |
+          version=$(cat package.json | grep '"version"' | head -1 | awk -F '"' '{print $4}')
+          echo "new_version=$version" >> $GITHUB_ENV
+
+      - name: Create and push tag
+        run: |
+          git tag v${{ env.new_version }}
+          git push origin v${{ env.new_version }}
 
       - name: Commit version bumps
         id: commit_version_bumps
